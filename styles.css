@@ -1,0 +1,80 @@
+* {
+	margin: 0px;
+	padding: 0px;
+	box-sizing: border-box;
+	/* border: 1px dashed purple; */
+	overflow: hidden;
+}
+
+:root {
+	--bgColor: cornflowerblue;
+	--boardColor: darkslategrey;
+	--boardSize: 90vmin;
+	/* --boardUnitSize: 20; pixels per square */
+	/* --boardUnitsCount: calc(var(--boardSize)/var(--boardUnitSize)); */
+	--boardUnitsCount: 40;
+	--foodColor: tomato;
+	--snakeColor: slateblue;
+}
+
+@media (min-width: 600px)  {
+	:root {
+		--boardSize: 70vmin;
+	}
+}
+
+@media (min-width: 800px)  {
+	:root {
+		--boardSize: 50vmin;
+	}
+}
+
+.container {
+	background-color: var(--bgColor);
+	height: 100vh;
+}
+
+.main {
+	width: var(--boardSize);
+}
+
+.scores {
+	width: inherit;
+	padding: 0 2rem;
+	justify-content: space-between;
+	align-items: center;
+	height: 2rem;
+	background-color: darkolivegreen;
+	color: blanchedalmond;
+}
+
+.board {
+	background: var(--boardColor);
+	width: var(--boardSize);
+	height: var(--boardSize);
+	display: grid;
+	grid-template: repeat(var(--boardUnitsCount), 1fr) / repeat(var(--boardUnitsCount), 1fr);
+}
+
+.food {
+	background-color: var(--foodColor);
+	border-radius: 50%;
+}
+
+.snake {
+	background-color: var(--snakeColor);
+}
+
+/* UTILS */
+.flex {
+	display: flex;
+}
+
+.flex-col {
+	flex-direction: column;
+}
+
+.flex-center-xy {
+	justify-content: center;
+	align-items: center;
+}
