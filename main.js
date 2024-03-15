@@ -28,7 +28,9 @@ const SETTINGS = {
  *   foodPosition: Position,
  *   direction: Direction|undefined,
  *   snake: SnakeSection[],
- *   refreshIntervalId: number|undefined
+ *   refreshIntervalId: number|undefined,
+ *   _score: number,
+ *   _highScore: number
  * }}
  */
 const STATE = {
@@ -39,7 +41,29 @@ const STATE = {
   direction: undefined,
   snake: [],
   refreshIntervalId: undefined,
+	_score: 0,
+	get score(){
+		return this._score
+	},
+	set score(newScore) {
+		this._score = newScore;
+		document.querySelector('#currentScore').textContent = newScore
+		if (newScore > this.highScore) {
+			this.highScore = newScore
+		}
+	},
+	_highScore: 0,
+	get highScore(){
+		return this._highScore
+	},
+	set highScore(newHighScore) {
+		this._highScore = newHighScore
+		document.querySelector('#highScore').textContent = newHighScore
+		localStorage.setItem('highScore', newHighScore)
+	},
 };
+
+
 
 const board = document.querySelector(".board");
 
@@ -136,7 +160,7 @@ function isOppositeDirection(direction) {
 }
 
 function isSpacebar(key) {
-  return key == " ";
+  return key == ' ';
 }
 
 function makeFood() {
@@ -266,6 +290,17 @@ function isSnakeAtFood() {
 function eatFood() {
   addFoodToSnake();
   addFoodToBoard();
+	STATE.score += 1
+}
+
+function gameLoop() {
+	if (!STATE.isGameRunning) return;
+	updateSnakePosition();
+	handleOutOfBounds();
+	drawSnake();
+	if (isSnakeAtFood()) {
+		eatFood();
+	}
 }
 
 function startGameplay() {
@@ -273,15 +308,7 @@ function startGameplay() {
   STATE.isGameRunning = true;
   STATE.isGameStarted = true;
 
-  return setInterval(() => {
-    if (!STATE.isGameRunning) return;
-    updateSnakePosition();
-    handleOutOfBounds();
-    drawSnake();
-		if (isSnakeAtFood()) {
-			eatFood();
-		}
-  }, SETTINGS.refreshInterval);
+  return setInterval(gameLoop, SETTINGS.refreshInterval);
 }
 
 /**
@@ -306,10 +333,15 @@ function handleInput(e) {
   }
 }
 
+function getPrevHighScore() {
+	STATE.highScore = +localStorage.getItem('highScore') || 0
+}
+
 function initBoard() {
   initSnake();
   drawSnake();
   addFoodToBoard();
+	getPrevHighScore()
   document.addEventListener("keydown", handleInput);
 }
 
