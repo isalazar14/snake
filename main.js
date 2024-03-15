@@ -159,8 +159,17 @@ function addFoodToBoard() {
   placeOnBoard(food, row, col);
 }
 
-function makeSnakeSection() {
-  return makeDivWithClassName("snake");
+/**
+ * 
+ * @param {('head' | 'body')} segment 
+ * @returns 
+ */
+function makeSnakeSegment(segment = 'body') {
+	const div = makeDivWithClassName('snake');
+	if (segment == 'head') {
+		div.classList.add('head')
+	}
+	return div
 }
 
 function handleSnakeCollision({row, col}) {
@@ -177,7 +186,7 @@ function drawSnake() {
 }
 
 function initSnake() {
-  const snakeHead = makeSnakeSection();
+  const snakeHead = makeSnakeSegment('head');
   const { row, col } = getRandomBoardRowCol();
   STATE.snake.push({ el: snakeHead, row, col });
   drawSnake();

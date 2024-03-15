@@ -65,6 +65,10 @@
 	background-color: var(--snakeColor);
 }
 
+.snake.head {
+	border: 1px dashed blanchedalmond
+}
+
 /* UTILS */
 .flex {
 	display: flex;
