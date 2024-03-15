@@ -318,7 +318,7 @@ function startGameplay() {
 function handleInput(e) {
   const { key } = e;
   console.log(key);
-  if (isSpacebar()) {
+  if (isSpacebar(key)) {
     togglePause();
     return;
   }
