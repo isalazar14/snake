@@ -3,16 +3,17 @@
 	padding: 0px;
 	box-sizing: border-box;
 	/* border: 1px dashed purple; */
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 	overflow: hidden;
 }
 
 :root {
+	--grideSize: 30;
 	--bgColor: cornflowerblue;
 	--boardColor: darkslategrey;
 	--boardSize: 90vmin;
 	/* --boardUnitSize: 20; pixels per square */
 	/* --boardUnitsCount: calc(var(--boardSize)/var(--boardUnitSize)); */
-	--boardUnitsCount: 40;
 	--foodColor: tomato;
 	--snakeColor: slateblue;
 }
@@ -25,7 +26,7 @@
 
 @media (min-width: 800px)  {
 	:root {
-		--boardSize: 50vmin;
+		--boardSize: 60vmin;
 	}
 }
 
@@ -53,7 +54,7 @@
 	width: var(--boardSize);
 	height: var(--boardSize);
 	display: grid;
-	grid-template: repeat(var(--boardUnitsCount), 1fr) / repeat(var(--boardUnitsCount), 1fr);
+	grid-template: repeat(var(--grideSize), 1fr) / repeat(var(--grideSize), 1fr);
 }
 
 .food {

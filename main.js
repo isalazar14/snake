@@ -1,7 +1,9 @@
 const SETTINGS = {
-  gridSize: 40,
+  gridSize: 30,
   refreshInterval: 100 /* ms */,
 };
+
+document.documentElement.style.setProperty('--gridSize', SETTINGS.gridSize)
 
 /**
  * @typedef {Object} Position
@@ -14,7 +16,7 @@ const SETTINGS = {
  */
 
 /**
- * @typedef {Object} SnakeSection
+ * @typedef {Object} SnakeSegment
  * @property {HTMLDivElement} el
  * @property {number} row
  * @property {number} col
@@ -26,8 +28,9 @@ const SETTINGS = {
  *   isGameRunning: boolean,
  *   isGameOver: boolean,
  *   foodPosition: Position,
- *   direction: Direction|undefined,
- *   snake: SnakeSection[],
+ *   curDirection: Direction|undefined,
+ *   newDirection: Direction|undefined,
+ *   snake: SnakeSegment[],
  *   refreshIntervalId: number|undefined,
  *   _score: number,
  *   _highScore: number
@@ -38,32 +41,31 @@ const STATE = {
   isGameRunning: false,
   isGameOver: false,
   foodPosition: { row: undefined, col: undefined },
-  direction: undefined,
+  curDirection: undefined,
+  newDirection: undefined,
   snake: [],
   refreshIntervalId: undefined,
-	_score: 0,
-	get score(){
-		return this._score
-	},
-	set score(newScore) {
-		this._score = newScore;
-		document.querySelector('#currentScore').textContent = newScore
-		if (newScore > this.highScore) {
-			this.highScore = newScore
-		}
-	},
-	_highScore: 0,
-	get highScore(){
-		return this._highScore
-	},
-	set highScore(newHighScore) {
-		this._highScore = newHighScore
-		document.querySelector('#highScore').textContent = newHighScore
-		localStorage.setItem('highScore', newHighScore)
-	},
+  _score: 0,
+  get score() {
+    return this._score;
+  },
+  set score(newScore) {
+    this._score = newScore;
+    document.querySelector("#currentScore").textContent = newScore;
+    if (newScore > this.highScore) {
+      this.highScore = newScore;
+    }
+  },
+  _highScore: 0,
+  get highScore() {
+    return this._highScore;
+  },
+  set highScore(newHighScore) {
+    this._highScore = newHighScore;
+    document.querySelector("#highScore").textContent = newHighScore;
+    localStorage.setItem("highScore", newHighScore);
+  },
 };
-
-
 
 const board = document.querySelector(".board");
 
@@ -97,7 +99,6 @@ function isOccupied({ row, col }) {
 }
 
 /**
- *
  * @param {HTMLDivElement} el
  * @param {number} col
  * @param {number} row
@@ -111,7 +112,6 @@ function placeOnBoard(el, row, col) {
 }
 
 /**
- *
  * @param {DirectionKey} key
  */
 function directionFromKey(key) {
@@ -129,7 +129,6 @@ function directionFromKey(key) {
  */
 
 /**
- *
  * @param {DirectionKey} key
  * @returns {boolean}
  */
@@ -137,30 +136,35 @@ function isDirectionKey(key) {
   return directionFromKey(key) != undefined;
 }
 
-/**
- *
- * @param {Direction} direction
- */
-function setDirection(direction) {
-  STATE.direction = direction;
+function isSpacebar(key) {
+  return key == " ";
 }
 
 /**
- *
  * @param {Direction} direction
  */
-function isOppositeDirection(direction) {
+function setCurDirection(direction) {
+  STATE.curDirection = direction;
+}
+
+/**
+ * @param {Direction} direction
+ */
+function setNewDirection(direction) {
+  STATE.newDirection = direction;
+}
+
+/**
+ * @param {Direction} direction
+ */
+function isOppositeCurDirection(direction) {
   const opposite = {
     Up: "Down",
     Down: "Up",
     Left: "Right",
     Right: "Left",
   };
-  return direction == opposite[STATE.direction];
-}
-
-function isSpacebar(key) {
-  return key == ' ';
+  return direction == opposite[STATE.curDirection];
 }
 
 function makeFood() {
@@ -184,40 +188,39 @@ function addFoodToBoard() {
 }
 
 /**
- * 
- * @param {('head' | 'body')} segment 
- * @returns 
+ * @param {('head' | 'body')} segment
+ * @returns
  */
-function makeSnakeSegment(segment = 'body') {
-	const div = makeDivWithClassName('snake');
-	if (segment == 'head') {
-		div.classList.add('head')
-	}
-	return div
+function makeSnakeSegment(segment = "body") {
+  const div = makeDivWithClassName("snake");
+  if (segment == "head") {
+    div.classList.add("head");
+  }
+  return div;
 }
 
-function handleSnakeCollision({row, col}) {
-	if (STATE.snake.some(section => section.row == row && section.col == col)) {
-		endGame()
-	}
+/**
+ * @param {SnakeSegment} segment
+ */
+function addSnakeSegment(segment) {
+  STATE.snake.push(segment);
 }
 
 function drawSnake() {
-  STATE.snake.forEach((section, i) => {
-    placeOnBoard(section.el, section.row, section.col);
-		if (i = 0) handleSnakeCollision({row, col})
-  });
+  STATE.snake.forEach((section, i) =>
+    placeOnBoard(section.el, section.row, section.col)
+  );
 }
 
 function initSnake() {
-  const snakeHead = makeSnakeSegment('head');
+  const snakeHead = makeSnakeSegment("head");
   const { row, col } = getRandomBoardRowCol();
-  STATE.snake.push({ el: snakeHead, row, col });
+  addSnakeSegment({ el: snakeHead, row, col });
   drawSnake();
 }
 
 function updateSnakeHeadPosition() {
-  switch (STATE.direction) {
+  switch (STATE.newDirection) {
     case "Up":
       STATE.snake[0].row -= 1;
       break;
@@ -233,19 +236,21 @@ function updateSnakeHeadPosition() {
     default:
       break;
   }
+  STATE.curDirection = STATE.newDirection;
 }
 
 function updateSnakeBodyPosition() {
   for (let i = STATE.snake.length - 1; i > 0; i--) {
-    const leadingSectionRow = STATE.snake[i - 1].row;
-    const leadingSectionCol = STATE.snake[i - 1].col;
-    STATE.snake[i].row = leadingSectionRow;
-    STATE.snake[i].col = leadingSectionCol;
+    const leadingSegmentRow = STATE.snake[i - 1].row;
+    const leadingSegmentCol = STATE.snake[i - 1].col;
+    STATE.snake[i].row = leadingSegmentRow;
+    STATE.snake[i].col = leadingSegmentCol;
   }
 }
 
 function updateSnakePosition() {
-  if (!STATE.direction) return;
+  if (!STATE.newDirection) return;
+
   if (STATE.snake.length > 1) {
     updateSnakeBodyPosition();
   }
@@ -253,7 +258,7 @@ function updateSnakePosition() {
 }
 
 function endGame() {
-  STATE.isGameOver = true;
+  // STATE.isGameOver = true;
   clearInterval(STATE.refreshIntervalId);
   alert("Game Over");
   location.reload();
@@ -270,15 +275,15 @@ function handleOutOfBounds() {
   }
 }
 
-function addFoodToSnake() {
-  const food = document.querySelector(".food");
-  if (!food) return;
-  food.className = "snake";
-  STATE.snake.push({
-    el: food,
-    row: STATE.foodPosition.row,
-    col: STATE.foodPosition.col,
-  });
+function handleSnakeSelfCollision() {
+  const { el, row: headRow, col: headCol } = STATE.snake[0];
+  if (
+    STATE.snake.some(
+      (seg, i) => seg.row == headRow && seg.col == headCol && i > 0
+    )
+  ) {
+    endGame();
+  }
 }
 
 function isSnakeAtFood() {
@@ -287,32 +292,50 @@ function isSnakeAtFood() {
   return foodRow == snakeRow && foodCol == snakeCol;
 }
 
+function addFoodToSnake() {
+  const food = document.querySelector(".food");
+  if (!food) return;
+  food.className = "snake";
+  addSnakeSegment({
+    el: food,
+    row: STATE.foodPosition.row,
+    col: STATE.foodPosition.col,
+  });
+}
+
 function eatFood() {
   addFoodToSnake();
   addFoodToBoard();
-	STATE.score += 1
+  STATE.score += 1;
+}
+
+function tryEatFood() {
+  if (isSnakeAtFood()) {
+    eatFood();
+  }
+}
+
+function togglePause() {
+  STATE.isGameRunning = !STATE.isGameRunning;
 }
 
 function gameLoop() {
-	if (!STATE.isGameRunning) return;
-	updateSnakePosition();
-	handleOutOfBounds();
-	drawSnake();
-	if (isSnakeAtFood()) {
-		eatFood();
-	}
+  if (!STATE.isGameRunning) return;
+	tryEatFood()
+  updateSnakePosition();
+  handleOutOfBounds();
+  handleSnakeSelfCollision();
+  drawSnake();
 }
 
 function startGameplay() {
-  if (!STATE.direction) return;
-  STATE.isGameRunning = true;
+  if (!STATE.newDirection) return;
   STATE.isGameStarted = true;
-
+  STATE.isGameRunning = true;
   return setInterval(gameLoop, SETTINGS.refreshInterval);
 }
 
 /**
- *
  * @param {KeyboardEvent} e
  */
 function handleInput(e) {
@@ -323,37 +346,26 @@ function handleInput(e) {
     return;
   }
   if (!isDirectionKey(key)) return;
-  const direction = directionFromKey(key);
 
-  if (isOppositeDirection(direction)) return;
+  const newDirection = directionFromKey(key);
 
-  setDirection(direction);
+  if (isOppositeCurDirection(newDirection)) return;
+
+  setNewDirection(newDirection);
   if (!STATE.isGameStarted) {
     STATE.refreshIntervalId = startGameplay();
   }
 }
 
 function getPrevHighScore() {
-	STATE.highScore = +localStorage.getItem('highScore') || 0
+  STATE.highScore = +localStorage.getItem("highScore") || 0;
 }
 
 function initBoard() {
+  getPrevHighScore();
   initSnake();
-  drawSnake();
   addFoodToBoard();
-	getPrevHighScore()
   document.addEventListener("keydown", handleInput);
-}
-
-function pauseGame() {
-  STATE.isGameRunning = false;
-}
-function unpauseGame() {
-  STATE.isGameRunning = true;
-}
-
-function togglePause() {
-  STATE.isGameRunning = !STATE.isGameRunning;
 }
 
 initBoard();
