@@ -3,7 +3,7 @@ const SETTINGS = {
   refreshInterval: 100 /* ms */,
 };
 
-document.documentElement.style.setProperty('--gridSize', SETTINGS.gridSize)
+document.documentElement.style.setProperty("--gridSize", SETTINGS.gridSize);
 
 /**
  * @typedef {Object} Position
@@ -12,7 +12,7 @@ document.documentElement.style.setProperty('--gridSize', SETTINGS.gridSize)
  */
 
 /**
- * @typedef {'Up' | 'Down' | 'Left' | 'Right'} Direction
+ * @typedef {'up' | 'down' | 'left' | 'right'} Direction
  */
 
 /**
@@ -114,12 +114,13 @@ function placeOnBoard(el, row, col) {
 /**
  * @param {DirectionKey} key
  */
-function directionFromKey(key) {
+function directionFromInput(key) {
+  // return key.replace("Arrow", "").toLocaleLowerCase()
   const directionMap = {
-    ArrowUp: "Up",
-    ArrowDown: "Down",
-    ArrowLeft: "Left",
-    ArrowRight: "Right",
+    ArrowUp: "up",
+    ArrowDown: "down",
+    ArrowLeft: "left",
+    ArrowRight: "right",
   };
   return directionMap[key];
 }
@@ -132,8 +133,8 @@ function directionFromKey(key) {
  * @param {DirectionKey} key
  * @returns {boolean}
  */
-function isDirectionKey(key) {
-  return directionFromKey(key) != undefined;
+function isDirectionInput(key) {
+  return directionFromInput(key) != undefined;
 }
 
 function isSpacebar(key) {
@@ -159,10 +160,10 @@ function setNewDirection(direction) {
  */
 function isOppositeCurDirection(direction) {
   const opposite = {
-    Up: "Down",
-    Down: "Up",
-    Left: "Right",
-    Right: "Left",
+    up: "down",
+    down: "up",
+    left: "right",
+    right: "left",
   };
   return direction == opposite[STATE.curDirection];
 }
@@ -221,16 +222,16 @@ function initSnake() {
 
 function updateSnakeHeadPosition() {
   switch (STATE.newDirection) {
-    case "Up":
+    case "up":
       STATE.snake[0].row -= 1;
       break;
-    case "Down":
+    case "down":
       STATE.snake[0].row += 1;
       break;
-    case "Left":
+    case "left":
       STATE.snake[0].col -= 1;
       break;
-    case "Right":
+    case "right":
       STATE.snake[0].col += 1;
       break;
     default:
@@ -321,7 +322,7 @@ function togglePause() {
 
 function gameLoop() {
   if (!STATE.isGameRunning) return;
-	tryEatFood()
+  tryEatFood();
   updateSnakePosition();
   handleOutOfBounds();
   handleSnakeSelfCollision();
@@ -336,18 +337,25 @@ function startGameplay() {
 }
 
 /**
- * @param {KeyboardEvent} e
+ * @param {KeyboardEvent | PointerEvent} e
  */
 function handleInput(e) {
-  const { key } = e;
-  console.log(key);
-  if (isSpacebar(key)) {
+  let input;
+  if (Object.hasOwn("key")) {
+    input = e.key;
+  } else {
+    input = e.target.dataset.key;
+  }
+  if (!input) return;
+
+  console.log(input);
+  if (isSpacebar(input)) {
     togglePause();
     return;
   }
-  if (!isDirectionKey(key)) return;
+  if (!isDirectionInput(input)) return;
 
-  const newDirection = directionFromKey(key);
+  const newDirection = directionFromInput(input);
 
   if (isOppositeCurDirection(newDirection)) return;
 
@@ -361,11 +369,18 @@ function getPrevHighScore() {
   STATE.highScore = +localStorage.getItem("highScore") || 0;
 }
 
+function registerListeners() {
+  document.addEventListener("keydown", handleInput);
+  document
+    .querySelectorAll(".d-btn")
+    .forEach((btn) => btn.addEventListener("click", handleInput));
+}
+
 function initBoard() {
   getPrevHighScore();
   initSnake();
   addFoodToBoard();
-  document.addEventListener("keydown", handleInput);
+  registerListeners();
 }
 
 initBoard();

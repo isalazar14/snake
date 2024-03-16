@@ -28,6 +28,9 @@
 	:root {
 		--boardSize: 60vmin;
 	}
+	.controls {
+		display: none !important;
+	}
 }
 
 .container {
@@ -55,6 +58,30 @@
 	height: var(--boardSize);
 	display: grid;
 	grid-template: repeat(var(--grideSize), 1fr) / repeat(var(--grideSize), 1fr);
+}
+
+.controls {
+	/* background-color: darkslateblue; */
+	border-radius: 50%;
+	margin-top: 0.5rem;
+	padding: 0.25rem;
+}
+
+.d-btn {
+	display: block;
+	color: blanchedalmond;
+	background-color: slateblue;
+	border: 1px solid darkslategray;
+	border-radius: 5px;
+	font-weight: 500;
+	font-size: 1.5rem;
+	width: 3rem;
+	height: 3rem;
+	margin: 1rem 0rem;
+}
+
+.d-btn.down {
+	transform: rotate(180deg);
 }
 
 .food {
